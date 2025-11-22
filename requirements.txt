@@ -4,5 +4,4 @@ pandas
 numpy
 datetime
 ephem
-plotly.graph_objects
-plotly.express
+plotly
