@@ -5,3 +5,5 @@ numpy
 datetime
 ephem
 plotly
+matplotlib
+
