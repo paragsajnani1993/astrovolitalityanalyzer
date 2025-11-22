@@ -43,15 +43,13 @@ def get_aspects(state_dict):
     return found
 
 def get_daily_events(current_date, prev_state):
-    # --- FIX: ROBUST DATE HANDLING ---
-    # Handles both Pandas Timestamp (from Dataframe) and Python Datetime (from Future Scanner)
+    # Robust date handling
     if hasattr(current_date, 'to_pydatetime'):
         d = current_date.to_pydatetime()
     else:
         d = current_date
 
     curr_state = get_planet_state(d)
-    
     events = []
     
     # 1. Ingress
@@ -70,25 +68,17 @@ def get_daily_events(current_date, prev_state):
 
 # --- 2. FUTURE PROJECTION ENGINE ---
 def find_future_dates(event_name, limit=5):
-    """
-    Parses the event name and scans the future to find the next occurrences.
-    """
     future_dates = []
-    
-    # Start from Tomorrow
     start_date = datetime.now() + timedelta(days=1)
-    end_limit = start_date + timedelta(days=365*5) # 5 Year Cap
+    end_limit = start_date + timedelta(days=365*5) 
     
     current_scan = start_date
     prev_state = get_planet_state(start_date - timedelta(days=1))
     
-    # Scan day by day
     while current_scan < end_limit and len(future_dates) < limit:
         day_events, curr_state = get_daily_events(current_scan, prev_state)
-        
         if event_name in day_events:
             future_dates.append(current_scan.date())
-            
         prev_state = curr_state
         current_scan += timedelta(days=1)
         
@@ -99,7 +89,6 @@ def analyze_market_performance(df, lookahead_days):
     event_returns = defaultdict(list)
     event_dates = defaultdict(list)
     
-    # Handle Timestamp for start date
     start_date = df.index[0]
     if hasattr(start_date, 'to_pydatetime'):
         start_py = start_date.to_pydatetime()
@@ -260,13 +249,15 @@ if st.session_state.get('run_perf', False):
                         st.success(f"**🚀 Top Bullish Signals**")
                         st.caption("High Win Rate (>60%) + High Impact")
                         bulls = sig_df[sig_df['Win Rate %'] >= 60].sort_values("Avg Move (Abs) %", ascending=False).head(5)
-                        st.table(bulls[['Event', 'Avg Move (Abs) %', 'Win Rate %']])
+                        # ADDED 'Occurrences' HERE
+                        st.table(bulls[['Event', 'Avg Move (Abs) %', 'Win Rate %', 'Occurrences']])
                         
                     with col_b:
                         st.error(f"**🔻 Top Bearish Signals**")
                         st.caption("Low Win Rate (<40%) + High Impact")
                         bears = sig_df[sig_df['Win Rate %'] <= 40].sort_values("Avg Move (Abs) %", ascending=False).head(5)
-                        st.table(bears[['Event', 'Avg Move (Abs) %', 'Win Rate %']])
+                        # ADDED 'Occurrences' HERE
+                        st.table(bears[['Event', 'Avg Move (Abs) %', 'Win Rate %', 'Occurrences']])
 
     except Exception as e:
         st.error(f"Error: {e}")
